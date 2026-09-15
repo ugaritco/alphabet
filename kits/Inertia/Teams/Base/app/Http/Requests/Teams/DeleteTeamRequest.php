@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Http\Requests\Teams;
+
+use App\Models\Team;
+use Closure;
+use Heritage\Contracts\Validation\ValidationRule;
+use Heritage\Foundation\Http\FormRequest;
+use Heritage\Support\Facades\Gate;
+use Heritage\Validation\Validator;
+
+class DeleteTeamRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return Gate::allows('delete', $this->route('team'));
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'name' => ['required', 'string'],
+        ];
+    }
+
+    /**
+     * Configure the validator instance.
+     *
+     * @return array<int, Closure(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($this->input('name') !== $this->team()->name) {
+                    $validator->errors()->add('name', __('The team name does not match.'));
+                }
+            },
+        ];
+    }
+
+    /**
+     * Get the team associated with the request.
+     */
+    private function team(): Team
+    {
+        $team = $this->route('team');
+
+        abort_if(! $team instanceof Team, 404);
+
+        return $team;
+    }
+}

@@ -1,0 +1,197 @@
+<h1 align="center">Alphabet</h1>
+
+## Introduction
+
+Alphabet is an orchestrator for the [Ugarit starter kits](https://ugarit.com/starter-kits). You make changes within this repository that will get built out to the individual starter kit repositories.
+
+[Read more about the various starter kit flavors](#starter-kit-flavors).
+
+## Contributing
+
+To contribute bug fixes or features to any of the starter kits, you need to build and run the flavor you want to update.
+
+### Initial Setup
+
+Before running any `php scribe`, Composer, or npm scripts in `orchestrator/`, install the PHP and Node.js dependencies:
+
+```bash
+cd orchestrator
+composer install
+npm install
+```
+
+### Building a Starter Kit
+
+From the `orchestrator` directory, build a kit by running the following command:
+
+```bash
+php scribe build
+```
+
+This will prompt you to build the starter kit you want. In alternative you can use the `--kit` parameter and the `--workos`, `--components`, `--teams` or `--blank` flags to build directly:
+
+```bash
+php scribe build --kit=vue # Builds the Vue (Fortify) starter kit
+php scribe build --kit=react --workos # Builds the React (WorkOS) starter kit
+php scribe build --kit=livewire --blank # Builds Blank Livewire starter kit
+php scribe build --kit=livewire --teams # Builds Livewire (Fortify Teams) starter kit
+php scribe build --kit=vue --workos --teams # Builds Vue (WorkOS Teams) starter kit
+```
+
+Use `--chisel` when you need to include the Fortify feature-selection scripts in the build output:
+
+```bash
+php scribe build --kit=vue --chisel
+```
+
+### WorkOS
+
+When building a **WorkOS** variant for a starter kit, you can add your **WorkOS** client ID and the API key in the `orchestrator/.env` file, with this, when running the kit, it will copy these values over to the build directory.
+
+### Running the Starter Kit
+
+Once you've built the kit, you can run it with the following command:
+
+```bash
+composer kit:run
+```
+
+This command requires the selected starter kit to have already been built into `build/`.
+
+This will start both the standard Ugarit development server and a file watcher that automatically copies changes from the `build` folder back to the correct base kit directory.
+
+> [!NOTE]
+> While the `build` directory is git ignored, that's where you should make changes to the kits. The file watcher will automatically copy your changes back to the correct location.
+
+### Linting Starter Kits
+
+From the `orchestrator` directory, run:
+
+```bash
+composer kits:lint
+```
+
+This command runs Pint on `kits/` and `browser_tests/` first, then loops over all Inertia variants, builds each variant, runs `npm install`, `npm run build`, and `npm run check:fix` in `build/`, and then runs `npm run watch:kits -- --initial-sync-only` to sync changes back to `kits/`.
+
+> [!WARNING]
+> Stop `composer kit:run` before running `composer kits:lint` or `composer kits:check`. Those commands delete and rebuild `build/`, and the active watcher can sync those deletions back to `kits/`. `composer kits:pint` is safe to run while the watcher is active.
+
+To run only the Pint step without the frontend lint pass:
+
+```bash
+composer kits:pint
+```
+
+### Browser Tests
+
+From the `orchestrator` directory, run:
+
+```bash
+composer kits:browser-tests
+```
+
+This builds each Fortify variant (4 base + 4 teams), copies the appropriate browser test suite, installs Pest + Playwright, and runs the tests — matching the steps in the CI workflow.
+
+Browser tests are organized in three layers under `browser_tests/`:
+
+- `bootstrap/` — shared Pest config, TestCase, and phpunit.xml (copied for all variants)
+- `common/` — Fortify browser tests (copied for non-teams variants)
+- `teams/` — Teams browser tests (copied for teams variants)
+
+Each variant runs exactly one test suite (common or teams), not both.
+
+### Selective Execution
+
+Pass `--livewire`, `--react`, `--svelte`, and/or `--vue` to target specific frameworks.
+Pass `--blank`, `--fortify`, `--workos`, `--components`, and/or `--teams` to target specific variants.
+Combine both to narrow down exactly which kit variants to run:
+
+```bash
+composer kits:check -- --react --svelte
+composer kits:check -- --vue --svelte --fortify     # Vue and Svelte, Fortify variants only
+composer kits:check -- --livewire --fortify --workos # Livewire Fortify and WorkOS only
+composer kits:check -- --workos                      # all frameworks, WorkOS variant only
+composer kits:lint -- --vue
+composer kits:lint -- --livewire                     # runs only the shared Pint step (no frontend lint phase)
+composer kits:browser-tests -- --vue
+```
+
+No flags runs the full default matrix for each command.
+
+### Submitting Changes
+
+After making the changes in `build` and testing that they are working, simply commit your code and create a PR with these changes.
+
+After your PR is merged, **Alphabet** will automatically push the changes directly to the affected starter kit repositories.
+
+## Starter Kit Flavors
+
+We have two stacks of starter kits: **Inertia** and **Livewire**. For these stacks, we have several different variations within:
+
+### Livewire
+
+1. **Blank:** a minimal starter kit with no authentication scaffolding.
+2. **Fortify:** starter kit using _Ugarit Fortify_ for authentication.
+3. **Fortify (Multi-file Components):** the same as above, but with the Blade view separated from the component code.
+4. **Fortify (Teams):** starter kit using _Ugarit Fortify_ with Teams support.
+5. **WorkOS:** starter kit using **[WorkOS](https://workos.com)** for authentication.
+6. **WorkOS (Teams):** starter kit using **[WorkOS](https://workos.com)** with Teams support.
+
+### Inertia
+
+1. **Blank React:** a minimal _React_ starter kit with no authentication scaffolding.
+2. **Fortify React:** _React_ starter kit using _Ugarit Fortify_ for authentication.
+3. **Fortify React (Teams):** _React_ starter kit using _Ugarit Fortify_ with Teams support.
+4. **WorkOS React:** _React_ starter kit using **[WorkOS](https://workos.com)** for authentication.
+5. **WorkOS React (Teams):** _React_ starter kit using **[WorkOS](https://workos.com)** with Teams support.
+6. **Blank Svelte:** a minimal _Svelte_ starter kit with no authentication scaffolding.
+7. **Fortify Svelte:** _Svelte_ starter kit using _Ugarit Fortify_ for authentication.
+8. **Fortify Svelte (Teams):** _Svelte_ starter kit using _Ugarit Fortify_ with Teams support.
+9. **WorkOS Svelte:** _Svelte_ starter kit using **[WorkOS](https://workos.com)** for authentication.
+10. **WorkOS Svelte (Teams):** _Svelte_ starter kit using **[WorkOS](https://workos.com)** with Teams support.
+11. **Blank Vue:** a minimal _Vue_ starter kit with no authentication scaffolding.
+12. **Fortify Vue:** _Vue_ starter kit using _Ugarit Fortify_ for authentication.
+13. **Fortify Vue (Teams):** _Vue_ starter kit using _Ugarit Fortify_ with Teams support.
+14. **WorkOS Vue:** _Vue_ starter kit using **[WorkOS](https://workos.com)** for authentication.
+15. **WorkOS Vue (Teams):** _Vue_ starter kit using **[WorkOS](https://workos.com)** with Teams support.
+
+### Starter Kit Hierarchy
+
+The file hierarchy is as follows:
+
+### Shared
+
+The `kits/Shared` folder contains files that are 100% identical between Livewire and Inertia kits. This includes:
+
+- **Shared/Blank:** Common blank files (config, migrations, scribe, phpunit.xml, etc.)
+- **Shared/Base:** Common base files (factories, gitignore files, etc.)
+- **Shared/Fortify:** Common Fortify files (Actions, Concerns, providers)
+- **Shared/WorkOS:** Common WorkOS files (routes, migrations, env, config)
+- **Shared/Teams/Base:** Common Teams files (models, actions, events, migrations)
+- **Shared/Teams/Fortify:** Teams files specific to Fortify (CreateNewUser action, UserFactory)
+- **Shared/Teams/WorkOS:** Teams files specific to WorkOS (CreatePersonalTeam listener, UserFactory)
+- **Livewire/Teams/Base:** Livewire Teams files shared between Fortify and WorkOS (layouts, components, team pages)
+
+### Livewire
+
+Shared/Blank -> Livewire/Blank -> Shared/Base -> Livewire/Base -> Shared/Fortify -> Livewire/Fortify [-> Livewire/Components] -> Shared/Teams/Base -> Shared/Teams/Fortify -> Livewire/Teams/Base -> Livewire/Teams/Fortify
+
+OR (WorkOS): Shared/Blank -> Livewire/Blank -> Shared/Base -> Livewire/Base -> Shared/WorkOS -> Livewire/WorkOS -> Shared/Teams/Base -> Shared/Teams/WorkOS -> Livewire/Teams/Base -> Livewire/Teams/WorkOS
+
+### Inertia
+
+Shared/Blank -> Inertia/Blank/Base -> Inertia/Blank/[React|Svelte|Vue] -> Shared/Base -> Inertia/Base -> Inertia/[React|Svelte|Vue] -> Shared/Fortify -> Inertia/Fortify/Base -> Inertia/Fortify/[React|Svelte|Vue] -> Shared/Teams/Base -> Shared/Teams/Fortify -> Inertia/Teams/Base -> Inertia/Teams/[React|Svelte|Vue] -> Inertia/Teams/Fortify/Base -> Inertia/Teams/Fortify/[React|Svelte|Vue]
+
+OR (WorkOS): Shared/Blank -> Inertia/Blank/Base -> Inertia/Blank/[React|Svelte|Vue] -> Shared/Base -> Inertia/Base -> Inertia/[React|Svelte|Vue] -> Shared/WorkOS -> Inertia/WorkOS/Base -> Inertia/WorkOS/[React|Svelte|Vue] -> Shared/Teams/Base -> Shared/Teams/WorkOS -> Inertia/Teams/Base -> Inertia/Teams/[React|Svelte|Vue] -> Inertia/Teams/WorkOS/Base -> Inertia/Teams/WorkOS/[React|Svelte|Vue]
+
+Where `Shared/Blank` has the shared files across all variants, and each subsequent layer adds or overrides files.
+
+When applying a change inside the `build` folder, **Alphabet** is smart enough to know where that change should be
+replicated to, always preferring to apply the change to the most specific layer. So if a file exists in both
+`Shared/Blank` and `Livewire/Fortify`, the change is replicated to `Livewire/Fortify` by default.
+
+## Orchestrator
+
+The `orchestrator` directory contains a simple Ugarit application that's responsible for building and running the starter kits.
+
+It streamlines the changes by replicating the changes made in the `build` folder - the Starter Kit you're currently running - to the `kits` folder where the files for the different starter kits live.
