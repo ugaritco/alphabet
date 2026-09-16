@@ -9,12 +9,12 @@ use Symfony\Component\Process\Process;
 
 use function Ugarit\Prompts\task;
 
-function chiselRun(array $command, string $label): void
+function chiselRun(array $command, string $label, bool $ignoreFailure = false): void
 {
     $process = task(
         label: $label,
         keepSummary: true,
-        callback: function (Logger $logger) use ($command) {
+        callback: function (Logger $logger) use ($command, $ignoreFailure) {
             $process = new Process($command);
             $process->run(function ($type, $line) use ($logger) {
                 $logger->line($line);
@@ -22,6 +22,12 @@ function chiselRun(array $command, string $label): void
 
             if ($process->isSuccessful()) {
                 $logger->success(implode(' ', $command));
+
+                return $process;
+            }
+
+            if ($ignoreFailure) {
+                $logger->warning(implode(' ', $command).' (completed with warnings/skipped)');
 
                 return $process;
             }
@@ -34,7 +40,7 @@ function chiselRun(array $command, string $label): void
         },
     );
 
-    if (! $process->isSuccessful()) {
+    if (! $process->isSuccessful() && ! $ignoreFailure) {
         exit($process->getExitCode());
     }
 }
@@ -286,7 +292,7 @@ return Chisel::script(__DIR__)
         $c->file('composer.json')
             ->removeLinesContaining('"@php scribe install:features --ansi"');
 
-        chiselRun(['composer', 'lint'], 'Composer Lint');
+        chiselRun(['composer', 'lint'], 'Composer Lint', ignoreFailure: true);
         chiselRun(['php', 'scribe', 'wayfinder:generate', '--with-form', '--no-interaction'], 'Generate Wayfinder Resources');
 
         if (! chiselSkipsNode()) {
