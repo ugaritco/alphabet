@@ -60,5 +60,5 @@
     "lightningcss-linux-x64-gnu": "^1.29.1",
     "lightningcss-win32-x64-msvc": "^1.29.1"
   },
-  "version": "1.00.00"
+  "version": "1.00.01"
 }

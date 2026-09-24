@@ -40,5 +40,5 @@
     "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
     "lightningcss-linux-x64-gnu": "^1.29.1"
   },
-  "version": "1.00.00"
+  "version": "1.00.01"
 }
